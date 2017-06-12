@@ -1,5 +1,6 @@
 package com.upwork.imageencryptor;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
 
@@ -7,6 +8,7 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.Tool;
+import org.apache.hadoop.util.ToolRunner;
 
 import com.upwork.imageencryptor.mapreduce.ImageEncryptionMapper;
 import com.upwork.imageencryptor.mapreduce.ImageEncryptionReducer;
@@ -55,5 +57,11 @@ public class ImageEncryptor extends Configured implements Tool {
     System.out.println("Usage: ");
     System.out.println(this.getClass().getCanonicalName() +
         "<input dir> <output dir> <number of reducers>");
+  }
+
+  public static void main(String[] args) throws Exception {
+    Configuration conf = new Configuration();
+    int exitCode = ToolRunner.run(conf, new ImageEncryptor(), args);
+    System.exit(exitCode);
   }
 }

@@ -30,19 +30,23 @@ public class ImageFileRecordReader
   private int currentCol;
   private int recordWidth;
   private int recordHeight;
+  private int imgType;
   private BufferedImage image;
   private String fileName;
   private CompositeKeyWritable currentKey;
   private ImageBytesWritable currentValue;
+  private String type;
 
   @Override
   public void initialize(InputSplit split, TaskAttemptContext context)
       throws IOException, InterruptedException {
     this.split = (FileSplit)split;
     this.fileName = this.split.getPath().getName();
+    this.type = this.fileName.substring(fileName.lastIndexOf(".")+1);
     this.fs = FileSystem.get(context.getConfiguration());
     this.in = fs.open(this.split.getPath());
     this.image = ImageIO.read(this.in);
+    this.imgType = image.getType();
     this.totalRows = (int) Math.ceil(image.getWidth() / 1000.0);
     this.totalCols = (int) Math.ceil(image.getHeight() / 1000.0);
     this.recordWidth = image.getWidth() / totalCols;
@@ -80,18 +84,20 @@ public class ImageFileRecordReader
   public boolean nextKeyValue() throws IOException, InterruptedException {
     if(currentRecordCount < totalRecords ) {
       BufferedImage imageRecord = new BufferedImage(recordWidth, recordHeight,
-          BufferedImage.TYPE_INT_ARGB);
+          imgType);
       Graphics2D graphics = imageRecord.createGraphics();
-      graphics.drawImage(image, 0, 0, recordWidth, recordHeight,
+      graphics.drawImage(image, 0, 0,
+          recordWidth, recordHeight,
           recordWidth * currentCol, recordHeight * currentRow,
           recordWidth * currentCol + recordWidth,
           recordHeight * currentRow + recordHeight, null);
       graphics.dispose();
+      imageRecord.flush();
       currentKey = new CompositeKeyWritable(fileName, currentRecordCount);
-      currentValue = new ImageBytesWritable();
-      currentValue.setBufferedImage(imageRecord);
+      currentValue = new ImageBytesWritable(imageRecord, type, currentRecordCount,
+          currentRow, currentCol);
       if(currentRow < totalRows) {
-        if(currentCol < totalCols) {
+        if(currentCol < totalCols - 1) {
           currentCol++;
         } else {
           currentCol = 0;

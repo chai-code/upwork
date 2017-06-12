@@ -14,6 +14,9 @@ public class CompositeKeyWritable implements Writable,
   private String fileName;
   private int chunkIndex;
 
+  public CompositeKeyWritable() {
+    super();
+  }
   public CompositeKeyWritable(String fileName,
       int chunkIndex) {
     this.fileName = fileName;
